@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useState, Suspense, lazy } from 'react';
 import { Movie, Showtime } from './lib/supabase';
 import MovieList from './components/MovieList';
 import MovieDetails from './components/MovieDetails';
 import BookingForm from './components/BookingForm';
 import Chatbot from './components/Chatbot';
-import { Film, Sparkles } from 'lucide-react';
+import { Film, Sparkles, Menu, X } from 'lucide-react';
+
+const AdminFAQs = lazy(() => import('./pages/AdminFAQs'));
 
 function App() {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [selectedShowtime, setSelectedShowtime] = useState<Showtime | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
 
   const handleMovieSelect = (movie: Movie) => {
     setSelectedMovie(movie);
@@ -41,9 +45,39 @@ function App() {
                 <p className="text-slate-400 text-sm">Your premier movie booking experience</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-yellow-400">
-              <Sparkles size={20} />
-              <span className="text-sm font-medium">Now Showing</span>
+
+            <div className="flex items-center gap-4">
+              <div className="hidden md:flex items-center gap-2 text-yellow-400">
+                <Sparkles size={20} />
+                <span className="text-sm font-medium">Now Showing</span>
+              </div>
+
+              {/* Burger menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setMenuOpen((s) => !s)}
+                  className="p-2 rounded-md hover:bg-slate-800/60 text-white"
+                  aria-label="Open menu"
+                >
+                  <Menu size={24} />
+                </button>
+
+                {menuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-40">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setAdminOpen(true);
+                          setMenuOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Manage FAQs
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -105,6 +139,26 @@ function App() {
       )}
 
       <Chatbot />
+
+      {/* Admin modal */}
+      {adminOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-lg max-w-4xl w-full mt-12 relative">
+            <button
+              onClick={() => setAdminOpen(false)}
+              className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors"
+              aria-label="Close admin"
+            >
+              <X size={20} />
+            </button>
+            <div className="p-6">
+              <Suspense fallback={<div>Loading admin...</div>}>
+                <AdminFAQs />
+              </Suspense>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
