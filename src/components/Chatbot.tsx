@@ -1,4 +1,5 @@
 /*
+<<<<<<< HEAD
   Chatbot component (Menu-based Option B)
 
   Key behavior for Assignment-1:
@@ -34,6 +35,39 @@ import {
   Home,
   RotateCcw,
 } from 'lucide-react';
+=======
+  Chatbot component
+
+  Design choices:
+  - Accessibility: Provides ARIA roles (dialog, aria-live) and keyboard support (Enter to send, Escape to close). Focus is managed so keyboard/screen-reader users can interact easily.
+  - Responsiveness: Renders as a full-width bottom sheet on small screens and a floating panel on larger screens using responsive Tailwind classes.
+  - Usability: Message area auto-scrolls, polite loading indicator, and friendly fallback suggestions when no FAQ match is found.
+  - FAQ matching: Uses direct keyword matches first, then fuzzy matching (Levenshtein + token overlap) with a conservative threshold to avoid incorrect answers.
+
+  How to run and test the chat window locally:
+  1) Install dependencies: `npm install` or `yarn` in the project root.
+  2) Start the dev server: `npm run dev` (uses Vite). Open http://localhost:5173 (or the console URL).
+  3) Interact with the chatbot:
+     - Click the floating chat button to open the dialog (or press Tab to focus and Enter to open).
+     - Type a question and press Enter to send (Shift+Enter inserts newline).
+     - Press Escape to close the chat; focus returns to the chat toggle button.
+     - Test on narrow screens to confirm bottom-sheet behavior and on wide screens for the floating panel.
+  4) To test accessibility: use a screen reader (NVDA/VoiceOver) and keyboard-only navigation to ensure announcements and focus work as expected.
+
+  Files of interest:
+  - `src/components/Chatbot.tsx`  (this file)
+  - `src/lib/faqRepository.ts`    (default fallback FAQs)
+
+  Notes:
+  - If Supabase is not configured, the component falls back to `getDefaultFaqs()`.
+  - To modify matching behavior adjust the threshold in `findAnswer`.
+*/
+
+import { useState, useEffect, useRef } from 'react';
+import { supabase, FAQ, SUPABASE_ENABLED } from '../lib/supabase';
+import { MessageCircle, X, Send, Bot, User } from 'lucide-react';
+import { getDefaultFaqs } from '../lib/faqRepository';
+>>>>>>> cd7540cd051c948551eb1235ae60dd341e2bbf48
 
 interface Message {
   id: string;
@@ -42,6 +76,7 @@ interface Message {
   timestamp: Date;
 }
 
+<<<<<<< HEAD
 // Multi-level predefined menu (Option B): users navigate by clicking options
 // instead of typing. This keeps behavior predictable and accessible.
 
@@ -200,16 +235,91 @@ const MENUS: Record<MenuId, Menu> = {
     ],
   },
 };
+=======
+const sampleFaqs: FAQ[] = getDefaultFaqs();
+>>>>>>> cd7540cd051c948551eb1235ae60dd341e2bbf48
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+<<<<<<< HEAD
   const [loading, setLoading] = useState(false);
   const [menuId, setMenuId] = useState<MenuId>('main');
   const [menuStack, setMenuStack] = useState<MenuId[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const toggleButtonRef = useRef<HTMLButtonElement>(null);
 
+=======
+  const [inputValue, setInputValue] = useState('');
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const toggleButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    fetchFAQs();
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && messages.length === 0) {
+      // Welcome message shown once when the chat opens
+      addBotMessage(
+        "Hello! I'm your movie booking assistant. How can I help you today? You can ask me about ticket prices, show timings, cancellation policy, or anything else!"
+      );
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Focus the input when the dialog opens for immediate typing
+      setTimeout(() => inputRef.current?.focus(), 0);
+
+      const onKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setIsOpen(false);
+        }
+      };
+
+      window.addEventListener('keydown', onKeyDown);
+      return () => window.removeEventListener('keydown', onKeyDown);
+    } else {
+      // Return focus to the toggle button when closed to preserve keyboard flow
+      toggleButtonRef.current?.focus();
+    }
+  }, [isOpen]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const fetchFAQs = async () => {
+    try {
+      if (!SUPABASE_ENABLED) {
+        // Use centralized default FAQs when Supabase is not configured
+        setFaqs(sampleFaqs);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('faqs')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setFaqs((data as FAQ[]) || []);
+    } catch (err) {
+      console.error('Error fetching FAQs:', err);
+      // fallback to repository faqs on error
+      setFaqs(sampleFaqs);
+    }
+  };
+
+>>>>>>> cd7540cd051c948551eb1235ae60dd341e2bbf48
   const addBotMessage = (text: string) => {
     const message: Message = {
       id: Date.now().toString(),
@@ -230,6 +340,7 @@ export default function Chatbot() {
     setMessages((prev) => [...prev, message]);
   };
 
+<<<<<<< HEAD
   const openChat = () => {
     setIsOpen(true);
     setMenuStack([]);
@@ -322,13 +433,133 @@ export default function Chatbot() {
       }
       setLoading(false);
     }, 200);
+=======
+  // Levenshtein distance for fuzzy matching (kept local for simplicity)
+  const levenshtein = (a: string, b: string): number => {
+    if (a === b) return 0;
+    const alen = a.length;
+    const blen = b.length;
+    if (alen === 0) return blen;
+    if (blen === 0) return alen;
+    const v0 = new Array(blen + 1).fill(0);
+    const v1 = new Array(blen + 1).fill(0);
+
+    for (let i = 0; i <= blen; i++) v0[i] = i;
+
+    for (let i = 0; i < alen; i++) {
+      v1[0] = i + 1;
+      for (let j = 0; j < blen; j++) {
+        const cost = a[i] === b[j] ? 0 : 1;
+        v1[j + 1] = Math.min(v1[j] + 1, v0[j + 1] + 1, v0[j] + cost);
+      }
+      for (let j = 0; j <= blen; j++) v0[j] = v1[j];
+    }
+    return v1[blen];
+  };
+
+  const similarity = (a: string, b: string): number => {
+    if (!a.length || !b.length) return 0;
+    const dist = levenshtein(a, b);
+    return 1 - dist / Math.max(a.length, b.length);
+  };
+
+  const tokenOverlap = (a: string, b: string): number => {
+    const aTokens = a.split(/\W+/).filter(Boolean);
+    const bTokens = b.split(/\W+/).filter(Boolean);
+    if (aTokens.length === 0 || bTokens.length === 0) return 0;
+    const setB = new Set(bTokens);
+    const common = aTokens.filter((t) => setB.has(t)).length;
+    return common / Math.max(aTokens.length, bTokens.length);
+  };
+
+  const findAnswer = (question: string): string | null => {
+    const lowercaseQuestion = question.toLowerCase();
+
+    // First try direct keyword / question match for high-precision answers
+    for (const faq of faqs) {
+      const keywords = (faq.keywords || '').toLowerCase().split(',').map(k => k.trim());
+      const questionWords = faq.question.toLowerCase();
+
+      if (
+        keywords.some(keyword => keyword && lowercaseQuestion.includes(keyword)) ||
+        lowercaseQuestion.includes(questionWords)
+      ) {
+        return faq.answer;
+      }
+    }
+
+    // Fallback: compute fuzzy scores and pick best match
+    let best: { faq?: FAQ; score: number } = { score: 0 };
+
+    for (const faq of faqs) {
+      const q = faq.question.toLowerCase();
+      const a = (faq.answer || '').toLowerCase();
+
+      const simQ = similarity(lowercaseQuestion, q);
+      const simA = similarity(lowercaseQuestion, a);
+      const overlapQ = tokenOverlap(lowercaseQuestion, q);
+      const overlapA = tokenOverlap(lowercaseQuestion, a);
+
+      // Weighted score: prefer question similarity and token overlap
+      const score = Math.max(simQ * 0.6 + overlapQ * 0.4, simA * 0.5 + overlapA * 0.5);
+
+      if (score > best.score) {
+        best = { faq, score };
+      }
+    }
+
+    // Threshold to avoid wrong matches; tweak as needed
+    if (best.faq && best.score >= 0.35) {
+      return best.faq.answer;
+    }
+
+    return null;
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputValue.trim()) return;
+
+    const userMessage = inputValue.trim();
+    setInputValue('');
+    addUserMessage(userMessage);
+    setLoading(true);
+
+    setTimeout(() => {
+      const answer = findAnswer(userMessage);
+
+      if (answer) {
+        addBotMessage(answer);
+      } else {
+        // Build a short fallback using repository faqs to suggest topics
+        const suggestions = sampleFaqs.map(f => `• ${f.question}`).join('\n');
+        addBotMessage(
+          "I'm sorry, I don't have a specific answer to that question. Here are some common topics I can help with:\n\n" +
+          suggestions +
+          "\n\nPlease try asking about one of these topics!"
+        );
+      }
+      setLoading(false);
+    }, 500);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Enter sends message; Shift+Enter allows newline
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+>>>>>>> cd7540cd051c948551eb1235ae60dd341e2bbf48
   };
 
   if (!isOpen) {
     return (
       <button
         ref={toggleButtonRef}
+<<<<<<< HEAD
         onClick={openChat}
+=======
+        onClick={() => setIsOpen(true)}
+>>>>>>> cd7540cd051c948551eb1235ae60dd341e2bbf48
         aria-expanded={isOpen}
         aria-controls="chatbot-dialog"
         aria-label="Open chat support"
@@ -339,6 +570,7 @@ export default function Chatbot() {
     );
   }
 
+<<<<<<< HEAD
   const ActionButton = ({
     label,
     icon: Icon,
@@ -363,6 +595,8 @@ export default function Chatbot() {
     </button>
   );
 
+=======
+>>>>>>> cd7540cd051c948551eb1235ae60dd341e2bbf48
   return (
     <div
       id="chatbot-dialog"
@@ -371,7 +605,11 @@ export default function Chatbot() {
       aria-labelledby="chatbot-title"
       className="fixed bottom-0 left-0 right-0 sm:bottom-6 sm:right-6 sm:left-auto sm:w-96 w-full max-w-md mx-auto sm:mx-0 h-[60vh] sm:h-[600px] bg-white rounded-t-lg sm:rounded-lg shadow-2xl flex flex-col z-40"
     >
+<<<<<<< HEAD
       <div className="bg-red-600 text-white p-4 rounded-t-lg sm:rounded-t-lg flex items-center justify-between">
+=======
+      <div className="bg-red-600 text-white p-4 rounded-t-lg sm:rounded-t-lg flex items-center justify-between" >
+>>>>>>> cd7540cd051c948551eb1235ae60dd341e2bbf48
         <div className="flex items-center gap-2">
           <Bot size={24} aria-hidden="true" />
           <div>
@@ -404,12 +642,25 @@ export default function Chatbot() {
             )}
             <div
               className={`max-w-[70%] p-3 rounded-lg ${
+<<<<<<< HEAD
                 message.isBot ? 'bg-white text-gray-800 shadow-sm' : 'bg-red-600 text-white'
+=======
+                message.isBot
+                  ? 'bg-white text-gray-800 shadow-sm'
+                  : 'bg-red-600 text-white'
+>>>>>>> cd7540cd051c948551eb1235ae60dd341e2bbf48
               }`}
             >
               <p className="text-sm whitespace-pre-line">{message.text}</p>
               <p className="text-xs mt-1 opacity-70">
+<<<<<<< HEAD
                 {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+=======
+                {message.timestamp.toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+>>>>>>> cd7540cd051c948551eb1235ae60dd341e2bbf48
               </p>
             </div>
             {!message.isBot && (
@@ -419,7 +670,10 @@ export default function Chatbot() {
             )}
           </div>
         ))}
+<<<<<<< HEAD
 
+=======
+>>>>>>> cd7540cd051c948551eb1235ae60dd341e2bbf48
         {loading && (
           <div className="flex gap-2 justify-start">
             <div className="bg-red-600 text-white p-2 rounded-full h-8 w-8 flex items-center justify-center">
@@ -438,6 +692,7 @@ export default function Chatbot() {
       </div>
 
       <div className="p-4 border-t bg-white sm:rounded-b-lg rounded-b-lg">
+<<<<<<< HEAD
         {/* Persistent actions (available everywhere) */}
         <div className="flex flex-wrap gap-2 items-center justify-between mb-3">
           <div className="flex flex-wrap gap-2">
@@ -473,6 +728,29 @@ export default function Chatbot() {
         <p className="mt-3 text-[11px] text-gray-500">
           Tip: Use the menu buttons. For anything not covered, you will be asked to contact the admin.
         </p>
+=======
+        <div className="flex gap-2">
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask me anything..."
+            aria-label="Type your message"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-red-600 focus:border-transparent outline-none"
+          />
+          <button
+            onClick={handleSendMessage}
+            disabled={!inputValue.trim() || loading}
+            aria-label="Send message"
+            title="Send"
+            className="bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600"
+          >
+            <Send size={20} aria-hidden="true" />
+          </button>
+        </div>
+>>>>>>> cd7540cd051c948551eb1235ae60dd341e2bbf48
       </div>
     </div>
   );
