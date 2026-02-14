@@ -1,6 +1,21 @@
-import { FAQ } from './supabase';
+import { FAQ as SupabaseFAQ } from './supabase';
+import faqsJson from './faqs.json';
+
+export type FAQ = SupabaseFAQ;
+
+// Use JSON file when available
+let jsonFaqs: FAQ[] | null = null;
+try {
+  jsonFaqs = (faqsJson as unknown) as FAQ[];
+} catch (e) {
+  jsonFaqs = null;
+}
 
 export function getDefaultFaqs(): FAQ[] {
+  if (jsonFaqs && Array.isArray(jsonFaqs) && jsonFaqs.length > 0) {
+    return jsonFaqs;
+  }
+
   return [
     {
       id: 'default-1',

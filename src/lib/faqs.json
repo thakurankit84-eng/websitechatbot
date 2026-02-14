@@ -1,0 +1,98 @@
+[
+  {
+    "id": "json-1",
+    "question": "What is the refund policy?",
+    "answer": "Refunds are available up to 24 hours before the showtime. Contact support for assistance.",
+    "category": "Refunds",
+    "keywords": "refund,cancellation,refund policy,money back",
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "emotion_answers": {
+      "angry": "I'm sorry for the trouble. Refunds are available up to 24 hours before the showtime. If you're facing issues, please contact support and we'll prioritize your request.",
+      "frustrated": "I know this can be frustrating. You can get a refund up to 24 hours before showtime. If something's not working, contact support and we'll help you through it.",
+      "confused": "Refunds are permitted up to 24 hours before the show. If you need help finding the refund option, tell me which booking you have and I can guide you.",
+      "anxious": "I understand your concern. Refunds are allowed up to 24 hours before the showtime — reach out to support if you need immediate assistance.",
+      "happy": "Good news — refunds are available up to 24 hours before showtime. Contact support if you'd like help processing it.",
+      "neutral": "Refunds are available up to 24 hours before the showtime. Contact support for assistance."
+    }
+  },
+  {
+    "id": "json-2",
+    "question": "How can I change my seat?",
+    "answer": "Seat changes are allowed depending on availability. Go to your booking and select \"Change Seats\". If seats are unavailable please contact support.",
+    "category": "Booking",
+    "keywords": "seat change,seats,change booking,modify seats",
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "emotion_answers": {
+      "frustrated": "I understand it's annoying when you can't change seats. Try opening your booking and using the 'Change Seats' option — if seats aren't available, contact support and we'll assist.",
+      "confused": "To change seats, open your booking, find 'Change Seats', and pick new seats if available. Tell me the booking ID and I can guide you step-by-step.",
+      "happy": "Great — if you'd like to change your seat, go to your booking and choose 'Change Seats'. If you need help, I'll walk you through it.",
+      "neutral": "Seat changes are allowed depending on availability. Go to your booking and select 'Change Seats'."
+    }
+  },
+  {
+    "id": "json-3",
+    "question": "Are children allowed?",
+    "answer": "Children are allowed; parental guidance may be required for certain ratings. Check the movie rating on the details page.",
+    "category": "Policies",
+    "keywords": "children,age,age restrictions,kids,family",
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "emotion_answers": {
+      "anxious": "I understand you might be worried. Children are generally allowed, but some movies have age restrictions. Check the movie rating and let me know which movie and I can confirm.",
+      "neutral": "Children are allowed; parental guidance may be required for certain ratings. Check the movie rating on the details page.",
+      "happy": "Yes — children are welcome! Check the movie rating to be sure and enjoy the show.",
+      "confused": "Generally yes. Some movies require parental guidance or have age limits — tell me which movie and I'll check the rating for you."
+    }
+  },
+  {
+    "id": "json-4",
+    "question": "What are the ticket prices?",
+    "answer": "Ticket prices vary by theater and showtime. We accept credit/debit cards, Apple Pay, Google Pay, and major UPI/NetBanking methods where available. Service fees may apply.",
+    "category": "Ticketing",
+    "keywords": "ticket price,price,payment,payment options,cost,how much",
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "emotion_answers": {
+      "anxious": "I understand cost matters. Ticket prices depend on theater and showtime — tell me the theater or movie and I can check the price for a specific show.",
+      "happy": "Great choice! Ticket prices vary by theater and showtime. Tell me the movie or theater and I'll find prices for you.",
+      "neutral": "Ticket prices vary by theater and showtime. We accept credit/debit cards, Apple Pay, Google Pay, and major UPI/NetBanking methods where available. Service fees may apply."
+    }
+  },
+  {
+    "id": "json-5",
+    "question": "How do I check show timings?",
+    "answer": "Show timings are listed on the movie details page. Click a movie to see available showtimes and seat availability for each time. You can also filter by date and theater.",
+    "category": "Showtimes",
+    "keywords": "show timing,show timings,availability,showtime,show times,when",
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "emotion_answers": {
+      "confused": "To check show timings, open the movie's details page and you'll see available showtimes. You can filter by date and theater. Which movie are you checking?",
+      "neutral": "Show timings are listed on the movie details page. Click a movie to see available showtimes and seat availability for each time. You can also filter by date and theater.",
+      "happy": "Excited to watch! To see showtimes open the movie page and pick a time — I can help you find the best slot."
+    }
+  },
+  {
+    "id": "json-6",
+    "question": "How does the booking process work?",
+    "answer": "Select a movie, pick a showtime, choose your seats, and complete payment. You will receive an email confirmation and e-ticket after successful payment.",
+    "category": "Booking",
+    "keywords": "booking process,how to book,book tickets,make reservation",
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "emotion_answers": {
+      "confused": "Here's a simple flow: select a movie ? pick showtime ? choose seats ? pay. After payment you'll get an email confirmation and an e-ticket. Tell me where you're stuck and I'll guide you.",
+      "frustrated": "I know booking can be tricky sometimes. Follow these steps: select movie, pick showtime, choose seats, complete payment. If something fails, tell me what step is failing and I'll help.",
+      "neutral": "Select a movie, pick a showtime, choose your seats, and complete payment. You will receive an email confirmation and e-ticket after successful payment."
+    }
+  },
+  {
+    "id": "json-7",
+    "question": "What are the age restrictions?",
+    "answer": "Movies are rated according to local guidelines (e.g., U, PG, PG-13, R). Please check the movie rating on the details page. Some theaters may enforce ID checks for age-restricted screenings.",
+    "category": "Policies",
+    "keywords": "age restriction,age restrictions,rating,rated,mature content",
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "emotion_answers": {
+      "anxious": "I understand concerns about age-appropriate content. Movies follow local ratings like U, PG, PG-13, R — check the movie page for the rating and let me know if you want me to confirm.",
+      "neutral": "Movies are rated according to local guidelines (e.g., U, PG, PG-13, R). Please check the movie rating on the details page. Some theaters may enforce ID checks for age-restricted screenings.",
+      "confused": "Age restrictions depend on the movie. Check the rating on the movie details page; if you tell me the movie I can check it for you."
+    }
+  }
+]

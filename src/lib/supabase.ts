@@ -118,4 +118,6 @@ export interface FAQ {
   category: string;
   keywords: string;
   created_at: string;
+  // Optional per-emotion override answers (keys are emotion names)
+  emotion_answers?: Record<string, string>;
 }
