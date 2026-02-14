@@ -30,12 +30,16 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase, FAQ, SUPABASE_ENABLED } from '../lib/supabase';
 import { MessageCircle, X, Send, Bot, User } from 'lucide-react';
 import { getDefaultFaqs } from '../lib/faqRepository';
+import { detectEmotion, Emotion, getEmotionColor } from '../lib/emotionDetection';
+import { generateEmpatheticResponse, generateNoAnswerResponse } from '../lib/empatheticResponses';
 
 interface Message {
   id: string;
   text: string;
   isBot: boolean;
   timestamp: Date;
+  emotion?: Emotion;
+  emotionConfidence?: number;
 }
 
 const sampleFaqs: FAQ[] = getDefaultFaqs();
@@ -46,6 +50,8 @@ export default function Chatbot() {
   const [inputValue, setInputValue] = useState('');
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [loading, setLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const toggleButtonRef = useRef<HTMLButtonElement>(null);
@@ -56,12 +62,62 @@ export default function Chatbot() {
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      // Welcome message shown once when the chat opens
+      initializeConversation();
       addBotMessage(
         "Hello! I'm your movie booking assistant. How can I help you today? You can ask me about ticket prices, show timings, cancellation policy, or anything else!"
       );
     }
   }, [isOpen]);
+
+  const initializeConversation = async () => {
+    if (!SUPABASE_ENABLED || conversationId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('conversations')
+        .insert({ session_id: sessionId })
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        setConversationId(data.id);
+      }
+    } catch (err) {
+      console.error('Error creating conversation:', err);
+    }
+  };
+
+  const saveMessageToDatabase = async (
+    text: string,
+    isBot: boolean,
+    emotion?: Emotion,
+    emotionConfidence?: number,
+    emotionKeywords?: string[]
+  ) => {
+    if (!SUPABASE_ENABLED || !conversationId) return;
+
+    try {
+      await supabase.from('conversation_messages').insert({
+        conversation_id: conversationId,
+        message_text: text,
+        is_bot: isBot,
+        detected_emotion: emotion,
+        emotion_confidence: emotionConfidence,
+        emotion_keywords: emotionKeywords
+      });
+
+      await supabase
+        .from('conversations')
+        .update({
+          last_activity: new Date().toISOString(),
+          message_count: messages.length + 1
+        })
+        .eq('id', conversationId);
+    } catch (err) {
+      console.error('Error saving message:', err);
+    }
+  };
 
   useEffect(() => {
     scrollToBottom();
@@ -112,24 +168,29 @@ export default function Chatbot() {
     }
   };
 
-  const addBotMessage = (text: string) => {
+  const addBotMessage = (text: string, emotion?: Emotion) => {
     const message: Message = {
       id: Date.now().toString(),
       text,
       isBot: true,
       timestamp: new Date(),
+      emotion,
     };
     setMessages((prev) => [...prev, message]);
+    saveMessageToDatabase(text, true, emotion);
   };
 
-  const addUserMessage = (text: string) => {
+  const addUserMessage = (text: string, emotion: Emotion, emotionConfidence: number, keywords: string[]) => {
     const message: Message = {
       id: Date.now().toString(),
       text,
       isBot: false,
       timestamp: new Date(),
+      emotion,
+      emotionConfidence,
     };
     setMessages((prev) => [...prev, message]);
+    saveMessageToDatabase(text, false, emotion, emotionConfidence, keywords);
   };
 
   // Levenshtein distance for fuzzy matching (kept local for simplicity)
@@ -219,22 +280,26 @@ export default function Chatbot() {
 
     const userMessage = inputValue.trim();
     setInputValue('');
-    addUserMessage(userMessage);
+
+    const emotionAnalysis = detectEmotion(userMessage);
+    addUserMessage(userMessage, emotionAnalysis.emotion, emotionAnalysis.confidence, emotionAnalysis.keywords);
     setLoading(true);
 
     setTimeout(() => {
       const answer = findAnswer(userMessage);
 
       if (answer) {
-        addBotMessage(answer);
-      } else {
-        // Build a short fallback using repository faqs to suggest topics
-        const suggestions = sampleFaqs.map(f => `• ${f.question}`).join('\n');
-        addBotMessage(
-          "I'm sorry, I don't have a specific answer to that question. Here are some common topics I can help with:\n\n" +
-          suggestions +
-          "\n\nPlease try asking about one of these topics!"
+        const empatheticAnswer = generateEmpatheticResponse(
+          answer,
+          emotionAnalysis.emotion,
+          emotionAnalysis.confidence
         );
+        addBotMessage(empatheticAnswer, emotionAnalysis.emotion);
+      } else {
+        const suggestions = sampleFaqs.map(f => `• ${f.question}`).join('\n');
+        const suggestedTopics = `Here are some common topics I can help with:\n\n${suggestions}`;
+        const empatheticNoAnswer = generateNoAnswerResponse(emotionAnalysis.emotion, suggestedTopics);
+        addBotMessage(empatheticNoAnswer, emotionAnalysis.emotion);
       }
       setLoading(false);
     }, 500);
@@ -309,6 +374,11 @@ export default function Chatbot() {
                   : 'bg-red-600 text-white'
               }`}
             >
+              {!message.isBot && message.emotion && message.emotion !== 'neutral' && (
+                <div className={`text-xs mb-1 font-semibold ${getEmotionColor(message.emotion)}`}>
+                  {message.emotion.charAt(0).toUpperCase() + message.emotion.slice(1)} detected
+                </div>
+              )}
               <p className="text-sm whitespace-pre-line">{message.text}</p>
               <p className="text-xs mt-1 opacity-70">
                 {message.timestamp.toLocaleTimeString([], {
